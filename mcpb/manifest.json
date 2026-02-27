@@ -1,0 +1,85 @@
+{
+  "manifest_version": "0.1",
+  "name": "salesforce-impl",
+  "display_name": "Salesforce Implementation Tracker",
+  "version": "1.0.0",
+  "description": "Manage Salesforce Implementation__c records — create implementations, log hours, update fields, and run queries via natural language.",
+  "author": {
+    "name": "TigerData"
+  },
+  "server": {
+    "type": "python",
+    "entry_point": "server/mcp_server.py",
+    "mcp_config": {
+      "command": "python",
+      "args": [
+        "${__dirname}/server/mcp_server.py"
+      ],
+      "env": {
+        "SF_CLIENT_ID": "${user_config.sf_client_id}",
+        "SF_CLIENT_SECRET": "${user_config.sf_client_secret}",
+        "SF_INSTANCE_URL": "${user_config.sf_instance_url}",
+        "SF_USER_EMAIL": "${user_config.sf_user_email}",
+        "PYTHONPATH": "${__dirname}/server/lib"
+      }
+    }
+  },
+  "user_config": {
+    "sf_client_id": {
+      "type": "string",
+      "title": "Client ID",
+      "description": "Salesforce Connected App consumer key",
+      "required": true
+    },
+    "sf_client_secret": {
+      "type": "string",
+      "title": "Client Secret",
+      "description": "Salesforce Connected App consumer secret",
+      "sensitive": true,
+      "required": true
+    },
+    "sf_instance_url": {
+      "type": "string",
+      "title": "Instance URL",
+      "description": "Your Salesforce instance URL (e.g. https://your-org.my.salesforce.com)",
+      "required": true,
+      "default": "https://your-org.my.salesforce.com"
+    },
+    "sf_user_email": {
+      "type": "string",
+      "title": "Your Email",
+      "description": "Your Salesforce login email — used for access control",
+      "required": true
+    }
+  },
+  "tools": [
+    {
+      "name": "create_implementation",
+      "description": "Create a new Implementation record from an Opportunity ID"
+    },
+    {
+      "name": "update_implementation",
+      "description": "Update fields on an existing Implementation record"
+    },
+    {
+      "name": "log_hours",
+      "description": "Log hours against an Implementation record"
+    },
+    {
+      "name": "query_implementations",
+      "description": "Run preset or custom queries on Implementation records"
+    },
+    {
+      "name": "get_implementation",
+      "description": "Get full details of a single Implementation record"
+    }
+  ],
+  "compatibility": {
+    "platforms": ["darwin", "linux", "win32"],
+    "runtimes": {
+      "python": ">=3.10"
+    }
+  },
+  "keywords": ["salesforce", "implementation", "crm", "time-tracking"],
+  "license": "MIT"
+}

@@ -1,0 +1,9 @@
+[project]
+name = "salesforce-impl"
+version = "1.0.0"
+description = "Salesforce Implementation Tracker MCP Server"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.0.0",
+    "httpx",
+]
