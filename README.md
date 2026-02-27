@@ -48,10 +48,9 @@ cd sfdc-mcp-skeleton
 ## Access Control
 
 - **Admins** (System Administrator profile) can update any record
-- **Manager** (set via `SF_MANAGER_EMAIL` env var) can update any record
 - **Everyone else** can only update records where they are the assigned CDE
 - **No delete operations** are exposed
-- Record creates are rate-limited to 5 per session
+- Record creates are rate-limited to 5 per rolling 60-second window
 
 ## Prerequisites
 
@@ -62,6 +61,5 @@ cd sfdc-mcp-skeleton
 ## Customization
 
 - **Picklist values**: Edit the `VALID_*` lists in `mcp_server.py` to match your org
-- **Manager email**: Set `SF_MANAGER_EMAIL` env var or edit the default in `mcp_server.py`
 - **Rate limits**: Adjust `MAX_CREATES_PER_SESSION` in `mcp_server.py`
 - **Schema**: See `CLAUDE.md` for the full field reference

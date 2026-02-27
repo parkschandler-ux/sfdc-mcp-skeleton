@@ -103,7 +103,6 @@ MULTIPICKLIST_VALIDATORS = {
 }
 
 API_VERSION = "v62.0"
-MANAGER_EMAIL = os.environ.get("SF_MANAGER_EMAIL", "")  # optional: email of user who can update any record
 MAX_CREATES_PER_WINDOW = 5
 CREATE_WINDOW_SECONDS = 60  # rolling 1-minute window
 
@@ -198,7 +197,7 @@ class AccessControl:
         self.user_id: Optional[str] = None
         self.profile_name: Optional[str] = None
         self.is_admin = False
-        self.is_manager = self.user_email == MANAGER_EMAIL
+        self.is_manager = False  # removed; use System Administrator profile for bypass
 
     async def resolve_user(self) -> None:
         result = await self.sf.query(
@@ -211,8 +210,8 @@ class AccessControl:
         self.profile_name = user.get("Profile", {}).get("Name", "")
         self.is_admin = self.profile_name == "System Administrator"
         logger.info(
-            "Resolved user %s → %s (profile=%s, admin=%s, manager=%s)",
-            self.user_email, self.user_id, self.profile_name, self.is_admin, self.is_manager,
+            "Resolved user %s → %s (profile=%s, admin=%s)",
+            self.user_email, self.user_id, self.profile_name, self.is_admin,
         )
 
     async def can_update(self, implementation_id: str) -> tuple[bool, str]:
@@ -222,7 +221,7 @@ class AccessControl:
         cde_id = record.get("CDE__c")
         if cde_id == self.user_id:
             return True, ""
-        return False, "Access denied: you are not the assigned CDE on this record. Only the CDE, admins, or the manager can update it."
+        return False, "Access denied: you are not the assigned CDE on this record. Only the CDE or admins can update it."
 
 
 # ---------------------------------------------------------------------------
@@ -443,7 +442,7 @@ async def update_implementation(
 ) -> str:
     """Update fields on an existing Implementation__c record.
 
-    Access control: only the assigned CDE, admins, or the manager can update a record.
+    Access control: only the assigned CDE or admins can update a record.
 
     Args:
         record_name_or_id: Implementation record Name (e.g. "IMPL-0042") or Salesforce ID.

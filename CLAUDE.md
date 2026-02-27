@@ -417,7 +417,7 @@ The project includes an MCP server (`mcp_server.py`) that exposes Salesforce ope
 | Tool | Description | Access |
 |------|-------------|--------|
 | `create_implementation` | Create from Opp ID (type, contract type, etc.) | All users |
-| `update_implementation` | Update fields on an existing record | CDE only (admin/manager bypass) |
+| `update_implementation` | Update fields on an existing record | CDE only (admin bypass) |
 | `log_hours` | Create an Implementation_Hours__c record | All users |
 | `query_implementations` | Run preset or custom SOQL queries | All users |
 | `get_implementation` | Get full details of a single record | All users |
@@ -426,7 +426,6 @@ The project includes an MCP server (`mcp_server.py`) that exposes Salesforce ope
 
 - `SF_USER_EMAIL` is resolved to a Salesforce User on startup
 - **Admins** (System Administrator profile) can update any record
-- **Manager** (manager@your-org.com) can update any record
 - **Everyone else** can only update records where they are the assigned CDE
 - **No delete operations** are exposed
 - Creates, queries, and logging hours are unrestricted
