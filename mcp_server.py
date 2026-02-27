@@ -7,6 +7,7 @@ Runs over stdio transport. No delete operations exposed.
 
 import os
 import logging
+import time
 from contextlib import asynccontextmanager
 from datetime import date
 from typing import Optional
@@ -103,7 +104,8 @@ MULTIPICKLIST_VALIDATORS = {
 
 API_VERSION = "v62.0"
 MANAGER_EMAIL = os.environ.get("SF_MANAGER_EMAIL", "")  # optional: email of user who can update any record
-MAX_CREATES_PER_SESSION = 5
+MAX_CREATES_PER_WINDOW = 5
+CREATE_WINDOW_SECONDS = 60  # rolling 1-minute window
 
 
 # ---------------------------------------------------------------------------
@@ -310,7 +312,7 @@ def format_implementation(record: dict) -> str:
 # These will be initialized on startup via lifespan
 sf_client: Optional[SalesforceClient] = None
 access_ctl: Optional[AccessControl] = None
-create_count: int = 0
+create_timestamps: list[float] = []
 
 
 @asynccontextmanager
@@ -364,9 +366,10 @@ async def create_implementation(
         features: Optional semicolon-separated features (e.g. "Compression;Hypertables"). Valid values: Read Replicas, HA Replicas, Data Tiering, Caggs, Compression, Migration, Vector, Hypertables.
         migration_type: Optional migration type. Valid values: Customer Tooling, Dual-write and backfill, Parallel Copy, pg_dump and pg_restore, NA, TS Tooling, Live Migration.
     """
-    global create_count
-    if create_count >= MAX_CREATES_PER_SESSION:
-        return f"Rate limit reached: {MAX_CREATES_PER_SESSION} records created this session. Restart the server to reset."
+    now = time.time()
+    recent = [t for t in create_timestamps if now - t < CREATE_WINDOW_SECONDS]
+    if len(recent) >= MAX_CREATES_PER_WINDOW:
+        return f"Rate limit reached: {MAX_CREATES_PER_WINDOW} records created in the last {CREATE_WINDOW_SECONDS} seconds. Wait a moment before creating more."
 
     # Validate picklists
     err = validate_picklist("Type__c", type)
@@ -419,7 +422,7 @@ async def create_implementation(
 
     resp = await sf_client.create_record("Implementation__c", data)
     record_id = resp.get("id", "unknown")
-    create_count += 1
+    create_timestamps.append(time.time())
 
     return (
         f"Implementation created successfully.\n"
@@ -503,9 +506,10 @@ async def log_hours(
         project_type: Optional project type. Valid values: Churn, Implementation, Internal Meetings, Join, Join - Lite, Join - QS, Pre-Sales, Pre-Sales (Discover Call), Projects, Support, Training.
         record_stage: Optional record stage. Valid values: Trial, Pre-Production, Production.
     """
-    global create_count
-    if create_count >= MAX_CREATES_PER_SESSION:
-        return f"Rate limit reached: {MAX_CREATES_PER_SESSION} records created this session. Restart the server to reset."
+    now = time.time()
+    recent = [t for t in create_timestamps if now - t < CREATE_WINDOW_SECONDS]
+    if len(recent) >= MAX_CREATES_PER_WINDOW:
+        return f"Rate limit reached: {MAX_CREATES_PER_WINDOW} records created in the last {CREATE_WINDOW_SECONDS} seconds. Wait a moment before creating more."
 
     if not project_task:
         return (
@@ -548,7 +552,7 @@ async def log_hours(
 
     resp = await sf_client.create_record("Implementation_Hours__c", data)
     hours_id = resp.get("id", "unknown")
-    create_count += 1
+    create_timestamps.append(time.time())
 
     return (
         f"Hours logged successfully.\n"
